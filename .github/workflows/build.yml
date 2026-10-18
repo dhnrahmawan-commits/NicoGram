@@ -3,8 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
 
 jobs:
   build:
@@ -23,18 +21,27 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x'
+          flutter-version: '3.22.x'
           channel: 'stable'
-          cache: true
+
+      - name: Recreate Android Project
+        run: |
+          cd nicogram
+          rm -rf android
+          flutter create --platforms=android .
 
       - name: Install Dependencies
-        run: flutter pub get
+        run: |
+          cd nicogram
+          flutter pub get
 
       - name: Build APK Release
-        run: flutter build apk --release
+        run: |
+          cd nicogram
+          flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: NicoGram-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: nicogram/build/app/outputs/flutter-apk/app-release.apk
