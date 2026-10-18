@@ -23,14 +23,12 @@ jobs:
         with:
           flutter-version: '3.22.x'
           channel: 'stable'
-          cache: true
 
-      - name: Fix Gradle & Recreate Android
+      - name: Recreate Android Project
         run: |
           cd nicogram
           rm -rf android
           flutter create --platforms=android .
-          sed -i 's/android:label="nicogram"/android:label="NicoGram"/g' android/app/src/main/AndroidManifest.xml
 
       - name: Install Dependencies
         run: |
