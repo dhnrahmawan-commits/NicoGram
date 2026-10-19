@@ -39,14 +39,12 @@ class NicoLoginScreen extends StatefulWidget {
 class _NicoLoginScreenState extends State<NicoLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
 
-  // Kunci API Telegram Anda
   final int apiId = 22162857;
   final String apiHash = "e735f9e5b843d626e18195a843c5e625";
 
   void _handleLogin() {
     String phoneNumber = _phoneController.text.trim();
     if (phoneNumber.isEmpty) {
-      // Peringatan jika nomor kosong
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
@@ -63,7 +61,6 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
       return;
     }
 
-    // Jika nomor terisi, lanjut ke Halaman Verifikasi OTP
     Navigator.push(
       context,
       CupertinoPageRoute(
@@ -180,7 +177,6 @@ class NicoOtpScreen extends StatelessWidget {
               CupertinoButton.filled(
                 child: const Text('Masuk ke NicoGram'),
                 onPressed: () {
-                  // Setelah OTP dimasukkan, langsung masuk ke Ruang Obrolan
                   Navigator.pushAndRemoveUntil(
                     context,
                     CupertinoPageRoute(builder: (context) => const NicoChatRoomScreen()),
@@ -197,7 +193,7 @@ class NicoOtpScreen extends StatelessWidget {
 }
 
 // ==========================================================================
-// HALAMAN CHAT (RUANG OBROLAN) & PENGATURAN (SAMA SEBELUMNYA)
+// HALAMAN CHAT (RUANG OBROLAN)
 // ==========================================================================
 class NicoChatRoomScreen extends StatefulWidget {
   const NicoChatRoomScreen({super.key});
@@ -303,6 +299,9 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
   }
 }
 
+// ==========================================================================
+// HALAMAN PENGATURAN NICO (LENGKAP DENGAN MENU SETELAN)
+// ==========================================================================
 class NicoSettingsScreen extends StatelessWidget {
   const NicoSettingsScreen({super.key});
 
@@ -333,9 +332,81 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                children: [
+                  _buildSettingRow(CupertinoIcons.settings, 'Pengaturan Umum', () {}),
+                  _buildDivider(),
+                  _buildSettingRow(CupertinoIcons.paintbrush, 'Tampilan & Tema', () {}),
+                  _buildDivider(),
+                  _buildSettingRow(CupertinoIcons.chat_bubble_2, 'Obrolan', () {}),
+                ],
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                children: [
+                  _buildSettingRowWithDetail(CupertinoIcons.news, 'CH Official', '@NicogramInfo'),
+                  _buildDivider(),
+                  _buildSettingRowWithDetail(CupertinoIcons.person_crop_circle, 'Contact Developer', '@wNakama'),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Text('NicoGram v1.0.0 (7112) arm64-v8a', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    const Text('Berdasarkan Telegram v12.10.6\nDibuat oleh @wNakama', textAlign: TextAlign.center, style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSettingRow(IconData icon, String title, VoidCallback onTap) {
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      onPressed: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
+          const SizedBox(width: 14),
+          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
+          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingRowWithDetail(IconData icon, String title, String detail) {
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      onPressed: () {},
+      child: Row(
+        children: [
+          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
+          const SizedBox(width: 14),
+          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
+          Text(detail, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15)),
+          const SizedBox(width: 6),
+          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(margin: const EdgeInsets.only(left: 52), height: 0.5, color: const Color(0xFF3A3A3C));
   }
 }
