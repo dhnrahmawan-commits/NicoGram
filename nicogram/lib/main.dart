@@ -217,7 +217,7 @@ class NicoOtpScreen extends StatelessWidget {
 }
 
 // ==========================================================================
-// 3. MENU UTAMA, CHAT LIST, CHAT ROOM, & SETTINGS
+// 3. MENU UTAMA (TAB BAR BAWAH: CHATS, CALLS, CONTACTS, SETTINGS)
 // ==========================================================================
 class NicoMainScreen extends StatelessWidget {
   const NicoMainScreen({super.key});
@@ -229,24 +229,63 @@ class NicoMainScreen extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.chat_bubble_2_fill), label: 'Chats'),
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.phone_fill), label: 'Calls'),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.person_2_fill), label: 'Contacts'),
           BottomNavigationBarItem(icon: Icon(CupertinoIcons.settings), label: 'Settings'),
         ],
       ),
       tabBuilder: (context, index) {
         if (index == 0) return const NicoChatListScreen();
         if (index == 1) return const NicoCallsScreen();
+        if (index == 2) return const NicoContactsScreen();
         return const NicoSettingsScreen();
       },
     );
   }
 }
 
-class NicoChatListScreen extends StatelessWidget {
+// ==========================================================================
+// 4. CHAT LIST SCREEN (DENGAN PENCARIAN INTERAKTIF)
+// ==========================================================================
+class NicoChatListScreen extends StatefulWidget {
   const NicoChatListScreen({super.key});
+
+  @override
+  State<NicoChatListScreen> createState() => _NicoChatListScreenState();
+}
+
+class _NicoChatListScreenState extends State<NicoChatListScreen> {
+  String searchQuery = "";
+
+  final List<Map<String, String>> allChats = [
+    {
+      'name': 'NicoGram Official • @wNakama',
+      'message': 'API ID: 22162857 terkonfigurasi dengan sukses!',
+      'time': 'Baru saja',
+      'unread': '1',
+    },
+    {
+      'name': 'Cloud Storage',
+      'message': 'Simpan file konfigurasi bot Telegram di sini.',
+      'time': 'Kemarin',
+      'unread': '',
+    },
+    {
+      'name': 'Saluran Informasi Android',
+      'message': 'Update sistem operasi versi terbaru dirilis.',
+      'time': '18 Okt',
+      'unread': '3',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    
+    final filteredChats = allChats.where((chat) {
+      return chat['name']!.toLowerCase().contains(searchQuery.toLowerCase()) ||
+             chat['message']!.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Chats', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
@@ -262,28 +301,40 @@ class NicoChatListScreen extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: ListView(
+        child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: CupertinoSearchTextField(
                 placeholder: 'Search chats or messages',
                 style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
               ),
             ),
-            const SizedBox(height: 4),
-            _buildChatItem(
-              context,
-              name: 'NicoGram Official • @wNakama',
-              message: 'API ID: 22162857 terkonfigurasi dengan sukses!',
-              time: 'Baru saja',
-              unreadCount: '1',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (context) => const NicoChatRoomScreen()),
-                );
-              },
+            Expanded(
+              child: ListView.builder(
+                itemCount: filteredChats.length,
+                itemBuilder: (context, index) {
+                  final chat = filteredChats[index];
+                  return _buildChatItem(
+                    context,
+                    name: chat['name']!,
+                    message: chat['message']!,
+                    time: chat['time']!,
+                    unreadCount: chat['unread']!,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (context) => NicoChatRoomScreen(chatTitle: chat['name']!)),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -351,33 +402,90 @@ class NicoChatListScreen extends StatelessWidget {
   }
 }
 
-class NicoChatRoomScreen extends StatelessWidget {
-  const NicoChatRoomScreen({super.key});
+// ==========================================================================
+// 5. CHAT ROOM SCREEN (KIRIM PESAN INTERAKTIF)
+// ==========================================================================
+class NicoChatRoomScreen extends StatefulWidget {
+  final String chatTitle;
+  const NicoChatRoomScreen({super.key, required this.chatTitle});
+
+  @override
+  State<NicoChatRoomScreen> createState() => _NicoChatRoomScreenState();
+}
+
+class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
+  final TextEditingController _msgController = TextEditingController();
+  final List<String> messages = [
+    "Selamat datang di NicoGram! Antarmuka iOS dan konfigurasi API ID sudah aktif sepenuhnya."
+  ];
+
+  void _sendMessage() {
+    if (_msgController.text.trim().isEmpty) return;
+    setState(() {
+      messages.add(_msgController.text.trim());
+      _msgController.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('NicoGram • Chat Room', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(widget.chatTitle, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
       ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
           children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  bool isMe = index % 2 != 0;
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(maxWidth: 290),
+                      decoration: BoxDecoration(
+                        color: isMe ? CupertinoColors.activeBlue : const Color(0xFF1C1C1E),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Text(messages[index], style: const TextStyle(color: Colors.white, fontSize: 16)),
+                    ),
+                  );
+                },
+              ),
+            ),
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                constraints: const BoxConstraints(maxWidth: 290),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C1C1E),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Text(
-                  "Selamat datang di NicoGram! Antarmuka iOS dan konfigurasi API ID sudah aktif sepenuhnya.",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemGrey6,
+              child: Row(
+                children: [
+                  const Icon(CupertinoIcons.add, color: CupertinoColors.activeBlue, size: 26),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: CupertinoTextField(
+                      controller: _msgController,
+                      placeholder: 'Message',
+                      placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black : CupertinoColors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: _sendMessage,
+                    child: const Icon(CupertinoIcons.arrow_up_circle_fill, color: CupertinoColors.activeBlue, size: 30),
+                  ),
+                ],
               ),
             ),
           ],
@@ -387,16 +495,28 @@ class NicoChatRoomScreen extends StatelessWidget {
   }
 }
 
+// ==========================================================================
+// 6. CALLS SCREEN
+// ==========================================================================
 class NicoCallsScreen extends StatelessWidget {
   const NicoCallsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(middle: Text('Calls')),
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Calls', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+      ),
       child: SafeArea(
-        child: Center(
-          child: Text('Belum ada riwayat panggilan.', style: TextStyle(color: CupertinoColors.systemGrey)),
+        child: ListView(
+          children: const [
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                child: Text('Belum ada riwayat panggilan masuk atau keluar.', style: TextStyle(color: CupertinoColors.systemGrey)),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -404,7 +524,64 @@ class NicoCallsScreen extends StatelessWidget {
 }
 
 // ==========================================================================
-// 4. HALAMAN PENGATURAN (LENGKAP DENGAN MENU & INFO DEVELOPER)
+// 7. CONTACTS SCREEN
+// ==========================================================================
+class NicoContactsScreen extends StatelessWidget {
+  const NicoContactsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Contacts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: const Icon(CupertinoIcons.add, color: CupertinoColors.activeBlue),
+          onPressed: () {},
+        ),
+      ),
+      child: SafeArea(
+        child: ListView(
+          children: [
+            _buildContactRow('Nico Developer', '@wNakama', isDark),
+            _buildContactRow('Telegram Support', '@support', isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactRow(String name, String username, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: CupertinoColors.separator, width: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: CupertinoColors.activeBlue, borderRadius: BorderRadius.circular(22)),
+            child: const Icon(CupertinoIcons.person_fill, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: isDark ? Colors.white : Colors.black)),
+              const SizedBox(height: 2),
+              Text(username, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================================================
+// 8. SETTINGS SCREEN (PENGATURAN LENGKAP & DEVELOPER INFO)
 // ==========================================================================
 class NicoSettingsScreen extends StatelessWidget {
   const NicoSettingsScreen({super.key});
@@ -437,7 +614,6 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Tombol Dark Mode
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -467,7 +643,6 @@ class NicoSettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Menu Setelan Lainnya
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -484,7 +659,6 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Menu CH Official & Contact Developer
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -499,7 +673,6 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Versi dan Info Pembuat di Bawah
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Center(
