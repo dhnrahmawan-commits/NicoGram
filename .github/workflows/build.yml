@@ -24,13 +24,13 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Clean Lockfile & Recreate Android
+      - name: Recreate Android with Unique ID
         run: |
           cd nicogram
           rm -rf android
           rm -f pubspec.lock
           flutter clean
-          flutter create --platforms=android .
+          flutter create --org com.wnakama --platforms=android .
 
       - name: Install Dependencies
         run: |
