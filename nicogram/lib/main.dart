@@ -28,7 +28,7 @@ class NicoGramApp extends StatelessWidget {
 }
 
 // ==========================================================================
-// HALAMAN LOGIN NIKO (UI iOS)
+// HALAMAN LOGIN NICO (UI iOS)
 // ==========================================================================
 class NicoLoginScreen extends StatefulWidget {
   const NicoLoginScreen({super.key});
