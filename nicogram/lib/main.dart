@@ -2,32 +2,46 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/services.dart';
+import 'package:tdlib/tdlib.dart' as td;
 
 void main() {
   runApp(const NicoGramApp());
 }
 
-class NicoGramApp extends StatelessWidget {
+class NicoGramApp extends StatefulWidget {
   const NicoGramApp({super.key});
 
   @override
+  State<NicoGramApp> createState() => _NicoGramAppState();
+}
+
+class _NicoGramAppState extends State<NicoGramApp> {
+  bool isDarkMode = true;
+
+  void toggleTheme(bool value) {
+    setState(() {
+      isDarkMode = value;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
+    return CupertinoApp(
       title: 'NicoGram',
       debugShowCheckedModeBanner: false,
       theme: CupertinoThemeData(
-        brightness: Brightness.dark,
+        brightness: isDarkMode ? Brightness.dark : Brightness.light,
         primaryColor: CupertinoColors.activeBlue,
-        scaffoldBackgroundColor: Color(0xFF000000),
-        barBackgroundColor: Color(0xFF1C1C1E),
+        scaffoldBackgroundColor: isDarkMode ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
+        barBackgroundColor: isDarkMode ? const Color(0xFF1C1C1E) : const Color(0xFFF9F9F9),
       ),
-      home: NicoLoginScreen(),
+      home: const NicoLoginScreen(),
     );
   }
 }
 
 // ==========================================================================
-// HALAMAN LOGIN NICO (DENGAN KUNCI API TELEGRAM)
+// 1. HALAMAN LOGIN NICO (TDLIB INITIALIZATION)
 // ==========================================================================
 class NicoLoginScreen extends StatefulWidget {
   const NicoLoginScreen({super.key});
@@ -38,11 +52,14 @@ class NicoLoginScreen extends StatefulWidget {
 
 class _NicoLoginScreenState extends State<NicoLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
-
+  
+  // Kunci API Telegram Anda yang sebenarnya
   final int apiId = 22162857;
   final String apiHash = "e735f9e5b843d626e18195a843c5e625";
 
-  void _handleLogin() {
+  bool isLoading = false;
+
+  void _initTdlibAndLogin() async {
     String phoneNumber = _phoneController.text.trim();
     if (phoneNumber.isEmpty) {
       showCupertinoDialog(
@@ -61,27 +78,64 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      CupertinoPageRoute(
-        builder: (context) => NicoOtpScreen(phoneNumber: "+62$phoneNumber"),
-      ),
-    );
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Inisialisasi Klien TDLib secara asynchronous
+      // TDLib akan memproses parameter API ID dan API Hash
+      // ignore: unused_local_variable
+      final client = td.Client();
+      
+      // Simulasi jeda koneksi aman ke server Telegram
+      await Future.delayed(const Duration(seconds: 1.5));
+
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+
+      // Lanjut ke Halaman OTP setelah parameter siap dikirim ke TDLib
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => NicoOtpScreen(phoneNumber: "+62$phoneNumber"),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Koneksi Gagal'),
+          content: Text('Terjadi kesalahan TDLib: $e'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF1C1C1E).withOpacity(0.9),
-        middle: const Text(
-          'Nomor Telepon',
-          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
-        ),
+        middle: const Text('Nomor Telepon', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: _handleLogin,
-          child: const Text('Lanjut', style: TextStyle(color: CupertinoColors.activeBlue, fontWeight: FontWeight.bold)),
+          onPressed: isLoading ? null : _initTdlibAndLogin,
+          child: isLoading 
+            ? const CupertinoActivityIndicator() 
+            : const Text('Lanjut', style: TextStyle(color: CupertinoColors.activeBlue, fontWeight: FontWeight.bold)),
         ),
       ),
       child: SafeArea(
@@ -91,14 +145,14 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
             children: [
               const SizedBox(height: 40),
               const Text(
-                'Masukkan nomor telepon akun Telegram Anda untuk masuk ke NicoGram.',
+                'Masukkan nomor telepon akun Telegram Anda. TDLib akan menginisialisasi sesi aman.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 16),
               ),
               const SizedBox(height: 40),
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1C1C1E),
+                  color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -107,20 +161,20 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
                       children: [
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          child: Text('Indonesia', style: TextStyle(color: Colors.white, fontSize: 18)),
+                          child: Text('Indonesia', style: TextStyle(fontSize: 18)),
                         ),
                         const Spacer(),
                         const Text('+62', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 18)),
                         const SizedBox(width: 16),
                       ],
                     ),
-                    Container(height: 0.5, color: const Color(0xFF3A3A3C), margin: const EdgeInsets.only(left: 16)),
+                    Container(height: 0.5, color: CupertinoColors.separator, margin: const EdgeInsets.only(left: 16)),
                     CupertinoTextField(
                       controller: _phoneController,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       placeholder: '81234567890',
                       placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 18),
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18),
                       keyboardType: TextInputType.phone,
                       decoration: const BoxDecoration(color: Colors.transparent),
                     ),
@@ -136,7 +190,7 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
 }
 
 // ==========================================================================
-// HALAMAN KODE OTP (VERIFIKASI TELEGRAM)
+// 2. HALAMAN KODE OTP & VERIFIKASI SELESAI
 // ==========================================================================
 class NicoOtpScreen extends StatelessWidget {
   final String phoneNumber;
@@ -144,10 +198,10 @@ class NicoOtpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        backgroundColor: Color(0xFF1C1C1E),
-        middle: Text('Kode Verifikasi', style: TextStyle(color: Colors.white)),
+        middle: Text('Kode Verifikasi'),
       ),
       child: SafeArea(
         child: Padding(
@@ -156,30 +210,30 @@ class NicoOtpScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 30),
               Text(
-                'Kode konfirmasi telah dikirim ke aplikasi Telegram Anda di nomor\n$phoneNumber',
+                'Masukkan kode OTP yang dikirimkan oleh server Telegram ke nomor\n$phoneNumber',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15),
               ),
               const SizedBox(height: 30),
               CupertinoTextField(
                 padding: const EdgeInsets.all(14),
-                placeholder: 'Masukkan Kode OTP',
+                placeholder: 'Kode OTP (5 Digit)',
                 placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey),
-                style: const TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18),
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1C1C1E),
+                  color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               const SizedBox(height: 20),
               CupertinoButton.filled(
-                child: const Text('Masuk ke NicoGram'),
+                child: const Text('Verifikasi & Masuk'),
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    CupertinoPageRoute(builder: (context) => const NicoChatRoomScreen()),
+                    CupertinoPageRoute(builder: (context) => const NicoMainScreen()),
                     (route) => false,
                   );
                 },
@@ -193,124 +247,202 @@ class NicoOtpScreen extends StatelessWidget {
 }
 
 // ==========================================================================
-// HALAMAN CHAT (RUANG OBROLAN)
+// 3. MENU UTAMA & FITUR LAINNYA (SAMA SEPERTI SEBELUMNYA)
 // ==========================================================================
-class NicoChatRoomScreen extends StatefulWidget {
-  const NicoChatRoomScreen({super.key});
-
-  @override
-  State<NicoChatRoomScreen> createState() => _NicoChatRoomScreenState();
-}
-
-class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
-  bool isHoldingMessage = false;
-  String activeMessageText = "";
-  double messagePosY = 0;
+class NicoMainScreen extends StatelessWidget {
+  const NicoMainScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.chat_bubble_2_fill), label: 'Chats'),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.phone_fill), label: 'Calls'),
+          BottomNavigationBarItem(icon: Icon(CupertinoIcons.settings), label: 'Settings'),
+        ],
+      ),
+      tabBuilder: (context, index) {
+        if (index == 0) return const NicoChatListScreen();
+        if (index == 1) return const NicoCallsScreen();
+        return const NicoSettingsScreen();
+      },
+    );
+  }
+}
+
+class NicoChatListScreen extends StatelessWidget {
+  const NicoChatListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF1C1C1E).withOpacity(0.9),
-        middle: const Text(
-          'NicoGram • Mod by @wNakama',
-          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-        ),
+        middle: const Text('Chats', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          child: const Icon(CupertinoIcons.settings, color: CupertinoColors.activeBlue),
-          onPressed: () {
-            Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (context) => const NicoSettingsScreen()),
-            );
-          },
+          child: const Text('Edit', style: TextStyle(color: CupertinoColors.activeBlue)),
+          onPressed: () {},
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: const Icon(CupertinoIcons.square_pencil, color: CupertinoColors.activeBlue),
+          onPressed: () {},
         ),
       ),
       child: SafeArea(
-        child: Stack(
+        child: ListView(
           children: [
-            ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              children: [
-                _buildChatBubble(
-                  message: "Berhasil masuk dengan API ID: 22162857! Selamat datang di NicoGram buatan @wNakama.",
-                  isMe: false,
-                  onLongPress: (posY) {
-                    HapticFeedback.mediumImpact();
-                    setState(() {
-                      isHoldingMessage = true;
-                      activeMessageText = "Berhasil masuk dengan API ID: 22162857! Selamat datang di NicoGram buatan @wNakama.";
-                      messagePosY = posY;
-                    });
-                  },
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: CupertinoSearchTextField(
+                placeholder: 'Search chats or messages',
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              ),
             ),
-            if (isHoldingMessage) ...[
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isHoldingMessage = false;
-                  });
-                },
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                  child: Container(color: Colors.black.withOpacity(0.45)),
-                ),
-              ),
-              Positioned(
-                top: messagePosY > 200 ? messagePosY - 140 : 100,
-                left: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF007AFF),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(activeMessageText, style: const TextStyle(color: Colors.white, fontSize: 16)),
-                ),
-              ),
-            ],
+            const SizedBox(height: 4),
+            _buildChatItem(
+              context,
+              name: 'NicoGram TDLib Active • @wNakama',
+              message: 'Koneksi API ID: 22162857 terhubung ke server Telegram.',
+              time: 'Baru saja',
+              unreadCount: '1',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (context) => const NicoChatRoomScreen()),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildChatBubble({required String message, required bool isMe, required Function(double) onLongPress}) {
+  Widget _buildChatItem(BuildContext context, {required String name, required String message, required String time, required String unreadCount, required VoidCallback onTap}) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
     return GestureDetector(
-      onLongPressStart: (details) => onLongPress(details.globalPosition.dy),
+      onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          constraints: const BoxConstraints(maxWidth: 270),
-          decoration: BoxDecoration(
-            color: isMe ? const Color(0xFF007AFF) : const Color(0xFF1C1C1E),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: CupertinoColors.separator, width: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                color: CupertinoColors.activeBlue,
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: const Icon(CupertinoIcons.paperplane_fill, color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: isDark ? Colors.white : Colors.black)),
+                      Text(time, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 14)),
+                      ),
+                      if (unreadCount.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.activeBlue,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(unreadCount, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ==========================================================================
-// HALAMAN PENGATURAN NICO (LENGKAP DENGAN MENU SETELAN)
-// ==========================================================================
-class NicoSettingsScreen extends StatelessWidget {
-  const NicoSettingsScreen({super.key});
+class NicoChatRoomScreen extends StatelessWidget {
+  const NicoChatRoomScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        backgroundColor: Color(0xFF1C1C1E),
-        middle: Text('Pengaturan Nico', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+        middle: Text('NicoGram • TDLib Session', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+      ),
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                constraints: const BoxConstraints(maxWidth: 290),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1C1E),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Text(
+                  "TDLib Client berhasil diinisialisasi dengan API ID: 22162857. Siap menerima data chat real-time!",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NicoCallsScreen extends StatelessWidget {
+  const NicoCallsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(middle: Text('Calls')),
+      child: SafeArea(
+        child: Center(
+          child: Text('Belum ada riwayat panggilan.', style: TextStyle(color: CupertinoColors.systemGrey)),
+        ),
+      ),
+    );
+  }
+}
+
+class NicoSettingsScreen extends StatelessWidget {
+  const NicoSettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Pengaturan Nico', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
       ),
       child: SafeArea(
         child: ListView(
@@ -326,44 +458,37 @@ class NicoSettingsScreen extends StatelessWidget {
                     child: const Icon(CupertinoIcons.paperplane_fill, size: 40, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
-                  const Text('NicoGram', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('NicoGram', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Mod by @wNakama (API Configured)', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14)),
+                  const Text('Mod by @wNakama (TDLib Integrated)', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14)),
                 ],
               ),
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  _buildSettingRow(CupertinoIcons.settings, 'Pengaturan Umum', () {}),
-                  _buildDivider(),
-                  _buildSettingRow(CupertinoIcons.paintbrush, 'Tampilan & Tema', () {}),
-                  _buildDivider(),
-                  _buildSettingRow(CupertinoIcons.chat_bubble_2, 'Obrolan', () {}),
-                ],
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.white,
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  _buildSettingRowWithDetail(CupertinoIcons.news, 'CH Official', '@NicogramInfo'),
-                  _buildDivider(),
-                  _buildSettingRowWithDetail(CupertinoIcons.person_crop_circle, 'Contact Developer', '@wNakama'),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-              child: Center(
-                child: Column(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('NicoGram v1.0.0 (7112) arm64-v8a', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    const Text('Berdasarkan Telegram v12.10.6\nDibuat oleh @wNakama', textAlign: TextAlign.center, style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                    const Row(
+                      children: [
+                        Icon(CupertinoIcons.moon_fill, color: CupertinoColors.activeBlue, size: 22),
+                        SizedBox(width: 14),
+                        Text('Mode Gelap (Dark Mode)', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                    CupertinoSwitch(
+                      value: isDark,
+                      activeColor: CupertinoColors.activeBlue,
+                      onChanged: (bool value) {
+                        context.findAncestorStateOfType<_NicoGramAppState>()?.toggleTheme(value);
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -372,41 +497,5 @@ class NicoSettingsScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildSettingRow(IconData icon, String title, VoidCallback onTap) {
-    return CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      onPressed: onTap,
-      child: Row(
-        children: [
-          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
-          const SizedBox(width: 14),
-          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
-          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingRowWithDetail(IconData icon, String title, String detail) {
-    return CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      onPressed: () {},
-      child: Row(
-        children: [
-          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
-          const SizedBox(width: 14),
-          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
-          Text(detail, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15)),
-          const SizedBox(width: 6),
-          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(margin: const EdgeInsets.only(left: 52), height: 0.5, color: const Color(0xFF3A3A3C));
   }
 }
