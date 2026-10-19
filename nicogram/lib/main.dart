@@ -403,6 +403,9 @@ class NicoCallsScreen extends StatelessWidget {
   }
 }
 
+// ==========================================================================
+// 4. HALAMAN PENGATURAN (LENGKAP DENGAN MENU & INFO DEVELOPER)
+// ==========================================================================
 class NicoSettingsScreen extends StatelessWidget {
   const NicoSettingsScreen({super.key});
 
@@ -430,10 +433,11 @@ class NicoSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text('NicoGram', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Mod by @wNakama', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14)),
+                  const Text('Mod by @wNakama', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
+            // Tombol Dark Mode
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -463,9 +467,90 @@ class NicoSettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            // Menu Setelan Lainnya
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildSettingRow(CupertinoIcons.settings, 'Pengaturan Umum', () {}),
+                  _buildDivider(),
+                  _buildSettingRow(CupertinoIcons.paintbrush, 'Tampilan & Tema', () {}),
+                  _buildDivider(),
+                  _buildSettingRow(CupertinoIcons.chat_bubble_2, 'Obrolan', () {}),
+                ],
+              ),
+            ),
+            // Menu CH Official & Contact Developer
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildSettingRowWithDetail(CupertinoIcons.news, 'CH Official', '@NicogramInfo'),
+                  _buildDivider(),
+                  _buildSettingRowWithDetail(CupertinoIcons.person_crop_circle, 'Contact Developer', '@wNakama'),
+                ],
+              ),
+            ),
+            // Versi dan Info Pembuat di Bawah
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Text('NicoGram v1.0.0 (7112) arm64-v8a', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    const Text('Berdasarkan Telegram v12.10.6\nDibuat oleh @wNakama', textAlign: TextAlign.center, style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSettingRow(IconData icon, String title, VoidCallback onTap) {
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      onPressed: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
+          const SizedBox(width: 14),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 16))),
+          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingRowWithDetail(IconData icon, String title, String detail) {
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      onPressed: () {},
+      child: Row(
+        children: [
+          Icon(icon, color: CupertinoColors.activeBlue, size: 22),
+          const SizedBox(width: 14),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 16))),
+          Text(detail, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15)),
+          const SizedBox(width: 6),
+          const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(margin: const EdgeInsets.only(left: 52), height: 0.5, color: CupertinoColors.separator);
   }
 }
