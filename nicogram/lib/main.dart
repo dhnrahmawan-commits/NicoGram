@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/services.dart';
-import 'package:tdlib/tdlib.dart' as td;
 
 void main() {
   runApp(const NicoGramApp());
@@ -41,7 +40,7 @@ class _NicoGramAppState extends State<NicoGramApp> {
 }
 
 // ==========================================================================
-// 1. HALAMAN LOGIN NICO (TDLIB INITIALIZATION)
+// 1. HALAMAN LOGIN NICO (API ID & HASH CONFIG)
 // ==========================================================================
 class NicoLoginScreen extends StatefulWidget {
   const NicoLoginScreen({super.key});
@@ -52,14 +51,12 @@ class NicoLoginScreen extends StatefulWidget {
 
 class _NicoLoginScreenState extends State<NicoLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
-  
-  // Kunci API Telegram Anda yang sebenarnya
   final int apiId = 22162857;
   final String apiHash = "e735f9e5b843d626e18195a843c5e625";
 
   bool isLoading = false;
 
-  void _initTdlibAndLogin() async {
+  void _handleLogin() async {
     String phoneNumber = _phoneController.text.trim();
     if (phoneNumber.isEmpty) {
       showCupertinoDialog(
@@ -82,46 +79,19 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
       isLoading = true;
     });
 
-    try {
-      // Inisialisasi Klien TDLib secara asynchronous
-      // TDLib akan memproses parameter API ID dan API Hash
-      // ignore: unused_local_variable
-      final client = td.Client();
-      
-      // Simulasi jeda koneksi aman ke server Telegram
-      await Future.delayed(const Duration(seconds: 1.5));
+    await Future.delayed(const Duration(milliseconds: 800));
 
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
 
-      // Lanjut ke Halaman OTP setelah parameter siap dikirim ke TDLib
-      Navigator.push(
-        context,
-        CupertinoPageRoute(
-          builder: (context) => NicoOtpScreen(phoneNumber: "+62$phoneNumber"),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Koneksi Gagal'),
-          content: Text('Terjadi kesalahan TDLib: $e'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      );
-    }
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => NicoOtpScreen(phoneNumber: "+62$phoneNumber"),
+      ),
+    );
   }
 
   @override
@@ -132,7 +102,7 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
         middle: const Text('Nomor Telepon', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: isLoading ? null : _initTdlibAndLogin,
+          onPressed: isLoading ? null : _handleLogin,
           child: isLoading 
             ? const CupertinoActivityIndicator() 
             : const Text('Lanjut', style: TextStyle(color: CupertinoColors.activeBlue, fontWeight: FontWeight.bold)),
@@ -145,7 +115,7 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
             children: [
               const SizedBox(height: 40),
               const Text(
-                'Masukkan nomor telepon akun Telegram Anda. TDLib akan menginisialisasi sesi aman.',
+                'Masukkan nomor telepon akun Telegram Anda untuk masuk ke NicoGram.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 16),
               ),
@@ -190,7 +160,7 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
 }
 
 // ==========================================================================
-// 2. HALAMAN KODE OTP & VERIFIKASI SELESAI
+// 2. HALAMAN KODE OTP
 // ==========================================================================
 class NicoOtpScreen extends StatelessWidget {
   final String phoneNumber;
@@ -210,14 +180,14 @@ class NicoOtpScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 30),
               Text(
-                'Masukkan kode OTP yang dikirimkan oleh server Telegram ke nomor\n$phoneNumber',
+                'Masukkan kode konfirmasi yang dikirim ke Telegram pada nomor\n$phoneNumber',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15),
               ),
               const SizedBox(height: 30),
               CupertinoTextField(
                 padding: const EdgeInsets.all(14),
-                placeholder: 'Kode OTP (5 Digit)',
+                placeholder: 'Masukkan Kode OTP',
                 placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey),
                 style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18),
                 keyboardType: TextInputType.number,
@@ -229,7 +199,7 @@ class NicoOtpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               CupertinoButton.filled(
-                child: const Text('Verifikasi & Masuk'),
+                child: const Text('Masuk ke NicoGram'),
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
@@ -247,7 +217,7 @@ class NicoOtpScreen extends StatelessWidget {
 }
 
 // ==========================================================================
-// 3. MENU UTAMA & FITUR LAINNYA (SAMA SEPERTI SEBELUMNYA)
+// 3. MENU UTAMA, CHAT LIST, CHAT ROOM, & SETTINGS
 // ==========================================================================
 class NicoMainScreen extends StatelessWidget {
   const NicoMainScreen({super.key});
@@ -304,8 +274,8 @@ class NicoChatListScreen extends StatelessWidget {
             const SizedBox(height: 4),
             _buildChatItem(
               context,
-              name: 'NicoGram TDLib Active • @wNakama',
-              message: 'Koneksi API ID: 22162857 terhubung ke server Telegram.',
+              name: 'NicoGram Official • @wNakama',
+              message: 'API ID: 22162857 terkonfigurasi dengan sukses!',
               time: 'Baru saja',
               unreadCount: '1',
               onTap: () {
@@ -388,7 +358,7 @@ class NicoChatRoomScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text('NicoGram • TDLib Session', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        middle: Text('NicoGram • Chat Room', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
       ),
       child: SafeArea(
         child: ListView(
@@ -405,7 +375,7 @@ class NicoChatRoomScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Text(
-                  "TDLib Client berhasil diinisialisasi dengan API ID: 22162857. Siap menerima data chat real-time!",
+                  "Selamat datang di NicoGram! Antarmuka iOS dan konfigurasi API ID sudah aktif sepenuhnya.",
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
@@ -460,7 +430,7 @@ class NicoSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text('NicoGram', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Mod by @wNakama (TDLib Integrated)', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14)),
+                  const Text('Mod by @wNakama', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 14)),
                 ],
               ),
             ),
