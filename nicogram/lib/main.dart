@@ -54,7 +54,7 @@ class _NicoLoginScreenState extends State<NicoLoginScreen> {
   bool isLoading = false;
 
   // Ganti URL ini dengan URL Publik FastAPI Codespaces Anda (port 8000)
-  final String backendUrl = "https://redesigned-yodel-rr7rxrpxx4xh5649-8001.app.github.dev";
+  final String backendUrl = "Http://144.79.202.196:40042](http://144.79.202.196:40042";
 
   void _handleLogin() async {
     String phoneNumber = _phoneController.text.trim();
