@@ -21,11 +21,114 @@ class NicoGramApp extends StatelessWidget {
         scaffoldBackgroundColor: Color(0xFF000000),
         barBackgroundColor: Color(0xFF1C1C1E),
       ),
-      home: NicoChatRoomScreen(),
+      // Halaman pertama yang dibuka sekarang adalah Login
+      home: NicoLoginScreen(),
     );
   }
 }
 
+// ==========================================================================
+// HALAMAN LOGIN NIKO (UI iOS)
+// ==========================================================================
+class NicoLoginScreen extends StatefulWidget {
+  const NicoLoginScreen({super.key});
+
+  @override
+  State<NicoLoginScreen> createState() => _NicoLoginScreenState();
+}
+
+class _NicoLoginScreenState extends State<NicoLoginScreen> {
+  final TextEditingController _phoneController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: const Color(0xFF1C1C1E).withOpacity(0.9),
+        middle: const Text(
+          'Nomor Telepon',
+          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: const Text('Lanjut', style: TextStyle(color: CupertinoColors.activeBlue, fontWeight: FontWeight.bold)),
+          onPressed: () {
+            // Simulasi pindah ke halaman chat setelah klik Lanjut
+            Navigator.pushReplacement(
+              context,
+              CupertinoPageRoute(builder: (context) => const NicoChatRoomScreen()),
+            );
+          },
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              const Text(
+                'Silakan konfirmasi kode negara dan masukkan nomor telepon Anda.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 16),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1C1E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    // Baris Kode Negara
+                    Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          child: Text('Indonesia', style: TextStyle(color: Colors.white, fontSize: 18)),
+                        ),
+                        const Spacer(),
+                        const Text('+62', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 18)),
+                        const SizedBox(width: 16),
+                      ],
+                    ),
+                    Container(height: 0.5, color: const Color(0xFF3A3A3C), margin: const EdgeInsets.only(left: 16)),
+                    // Baris Input Nomor
+                    CupertinoTextField(
+                      controller: _phoneController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      placeholder: 'Nomor telepon',
+                      placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 18),
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      keyboardType: TextInputType.phone,
+                      decoration: const BoxDecoration(color: Colors.transparent),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Sinkronisasi Kontak', style: TextStyle(color: Colors.white, fontSize: 16)),
+                  CupertinoSwitch(
+                    value: true,
+                    activeColor: CupertinoColors.activeBlue,
+                    onChanged: (bool value) {},
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================================================
+// HALAMAN CHAT (RUANG OBROLAN)
+// ==========================================================================
 class NicoChatRoomScreen extends StatefulWidget {
   const NicoChatRoomScreen({super.key});
 
@@ -43,12 +146,10 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         backgroundColor: const Color(0xFF1C1C1E).withOpacity(0.9),
-        // Judul atas dengan penanda mod by @wNakama
         middle: const Text(
           'NicoGram • Mod by @wNakama',
           style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
         ),
-        // Tombol menuju Halaman Pengaturan (Settings ala Neko/Telegram iOS)
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           child: const Icon(CupertinoIcons.settings, color: CupertinoColors.activeBlue),
@@ -84,13 +185,13 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
                   },
                 ),
                 _buildChatBubble(
-                  message: "Ketuk ikon roda gigi di pojok kiri atas untuk membuka Pengaturan Neko & melihat informasi pembuat!",
+                  message: "Ketuk ikon roda gigi di pojok kiri atas untuk membuka Pengaturan Nico & melihat informasi pembuat!",
                   isMe: true,
                   onLongPress: (posY) {
                     HapticFeedback.mediumImpact();
                     setState(() {
                       isHoldingMessage = true;
-                      activeMessageText = "Ketuk ikon roda gigi di pojok kiri atas untuk membuka Pengaturan Neko & melihat informasi pembuat!";
+                      activeMessageText = "Ketuk ikon roda gigi di pojok kiri atas untuk membuka Pengaturan Nico & melihat informasi pembuat!";
                       messagePosY = posY;
                     });
                   },
@@ -106,9 +207,7 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
                 },
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.45),
-                  ),
+                  child: Container(color: Colors.black.withOpacity(0.45)),
                 ),
               ),
               Positioned(
@@ -188,18 +287,8 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: isRed ? CupertinoColors.systemRed : Colors.white,
-              fontSize: 15,
-            ),
-          ),
-          Icon(
-            icon,
-            color: isRed ? CupertinoColors.systemRed : Colors.white,
-            size: 18,
-          ),
+          Text(title, style: TextStyle(color: isRed ? CupertinoColors.systemRed : Colors.white, fontSize: 15)),
+          Icon(icon, color: isRed ? CupertinoColors.systemRed : Colors.white, size: 18),
         ],
       ),
     );
@@ -207,7 +296,7 @@ class _NicoChatRoomScreenState extends State<NicoChatRoomScreen> {
 }
 
 // ==========================================================================
-// HALAMAN PENGATURAN NIKO (SETTINGS) & INFORMASI DEVELOPER
+// HALAMAN PENGATURAN NICO (SETTINGS)
 // ==========================================================================
 class NicoSettingsScreen extends StatelessWidget {
   const NicoSettingsScreen({super.key});
@@ -218,49 +307,33 @@ class NicoSettingsScreen extends StatelessWidget {
       navigationBar: const CupertinoNavigationBar(
         backgroundColor: Color(0xFF1C1C1E),
         middle: Text(
-          'Pengaturan Neko',
+          'Pengaturan Nico',
           style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
         ),
       ),
       child: SafeArea(
         child: ListView(
           children: [
-            // Header Info Aplikasi & Modder
             Container(
               padding: const EdgeInsets.all(20),
               alignment: Alignment.center,
               child: Column(
                 children: [
                   Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF007AFF),
-                      borderRadius: BorderRadius.circular(40),
-                    ),
+                    width: 80, height: 80,
+                    decoration: BoxDecoration(color: const Color(0xFF007AFF), borderRadius: BorderRadius.circular(40)),
                     child: const Icon(CupertinoIcons.paperplane_fill, size: 40, color: Colors.white),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'NicoGram',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('NicoGram', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Mod by @wNakama',
-                    style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
+                  const Text('Mod by @wNakama', style: TextStyle(color: CupertinoColors.activeBlue, fontSize: 15, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
-
-            // Menu Utama Pengaturan
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
               child: Column(
                 children: [
                   _buildSettingRow(CupertinoIcons.settings, 'Pengaturan Umum', () {}),
@@ -271,14 +344,9 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Informasi Resmi (CH Official & Contact Developer)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(12)),
               child: Column(
                 children: [
                   _buildSettingRowWithDetail(CupertinoIcons.news, 'CH Official', '@NicogramInfo'),
@@ -287,23 +355,14 @@ class NicoSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Footer / Kredit Bawah ala Nekogram
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               child: Center(
                 child: Column(
                   children: [
-                    const Text(
-                      'NicoGram v1.0.0 (7112) arm64-v8a',
-                      style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13),
-                    ),
+                    const Text('NicoGram v1.0.0 (7112) arm64-v8a', style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Berdasarkan Telegram v12.10.6\nDibuat oleh @wNakama',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13),
-                    ),
+                    const Text('Berdasarkan Telegram v12.10.6\nDibuat oleh @wNakama', textAlign: TextAlign.center, style: TextStyle(color: CupertinoColors.systemGrey, fontSize: 13)),
                   ],
                 ),
               ),
@@ -322,12 +381,7 @@ class NicoSettingsScreen extends StatelessWidget {
         children: [
           Icon(icon, color: CupertinoColors.activeBlue, size: 22),
           const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
+          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
           const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
         ],
       ),
@@ -342,16 +396,8 @@ class NicoSettingsScreen extends StatelessWidget {
         children: [
           Icon(icon, color: CupertinoColors.activeBlue, size: 22),
           const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-          Text(
-            detail,
-            style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15),
-          ),
+          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16))),
+          Text(detail, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 15)),
           const SizedBox(width: 6),
           const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 18),
         ],
@@ -360,10 +406,6 @@ class NicoSettingsScreen extends StatelessWidget {
   }
 
   Widget _buildDivider() {
-    return Container(
-      margin: const EdgeInsets.only(left: 52),
-      height: 0.5,
-      color: const Color(0xFF3A3A3C),
-    );
+    return Container(margin: const EdgeInsets.only(left: 52), height: 0.5, color: const Color(0xFF3A3A3C));
   }
 }
