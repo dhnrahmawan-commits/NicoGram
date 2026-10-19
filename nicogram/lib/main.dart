@@ -263,7 +263,7 @@ class NicoSettingsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildSettingRow(CupertinoIcons.settings_raw, 'Pengaturan Umum', () {}),
+                  _buildSettingRow(CupertinoIcons.settings, 'Pengaturan Umum', () {}),
                   _buildDivider(),
                   _buildSettingRow(CupertinoIcons.paintbrush, 'Tampilan & Tema', () {}),
                   _buildDivider(),
